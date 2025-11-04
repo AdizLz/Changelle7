@@ -1,5 +1,7 @@
-package org.example;
+package org.example.service;
 
+import org.example.DatabaseManager;
+import org.example.model.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;

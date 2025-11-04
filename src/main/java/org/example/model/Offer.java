@@ -1,4 +1,4 @@
-package org.example;
+package org.example.model;
 
 public class Offer {
     // dbId corresponde al id autogenerado en la tabla offers (opcional en JSON)

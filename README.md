@@ -1,182 +1,169 @@
-# Reto6 — Online Store (API + UI) - Java + Spark
+Reto6 - Auction Store (Signed Memorabilia)
 
-This repository contains an online store demo implemented with Java and the Spark framework. The README below explains how to run, test and troubleshoot the application.
+Overview
+--------
+This project is a small online auction store for celebrity-autographed items. It provides a REST API, server-side rendered pages (Mustache), and real-time price updates via WebSocket.
 
-Project overview
-- Backend: Java 17 + Spark Java
-- Templates: Mustache (HTML views)
-- JSON: Gson
-- Logging: SLF4J + Logback
-- Persistence: PostgreSQL (recommended) or H2 embedded (fallback)
+Key features implemented (Sprint 3)
+----------------------------------
+- REST API for users, items and offers
+- Filters for items (API + UI) using query parameters: `q`, `minPrice`, `maxPrice`
+- PATCH endpoint to update an item price: `PATCH /api/items/:id/price`
+- WebSocket server for real-time price updates at `/ws/prices` (broadcasts `price_update` messages)
+- Frontend templates updated to receive real-time updates and to apply filters
 
-Implemented features
-- Users API
-  - GET /users — list users
-  - GET /users/:id — get user by id
-  - POST /users/:id — create user
-  - PUT /users/:id — update user
-  - DELETE /users/:id — delete user
-  - OPTIONS /users/:id — check existence
+Tech stack
+----------
+- Java 17
+- Spark Java (web framework)
+- Mustache templates
+- Gson (JSON)
+- HikariCP + PostgreSQL for persistence
+- Maven for build
 
-- Items API
-  - GET /api/items — list items (JSON) (returns id, name, price)
-  - GET /api/items/:id — get full item (JSON)
-  - GET /items — HTML view: items list
-  - GET /items/:id — HTML view: item detail (includes offer form)
+Build and run (Windows, cmd.exe)
+--------------------------------
+1. Build the project:
 
-- Offers API
-  - POST /api/offers — create an offer (persists to DB)
-  - GET /api/offers — list all offers (JSON)
-  - GET /api/offers/item/:itemId — list offers for a specific item (JSON)
-
-- Frontend resources (under `src/main/resources/public`):
-  - `script.js` — handles offer form and AJAX submission
-  - `styles.css` — main styles
-
-Requirements
-- Java 17 (JDK)
-- Maven
-- PostgreSQL (optional; application falls back to H2 if Postgres is not configured)
-
-Repository structure (relevant parts)
-```
-src/
-  main/
-    java/org/example/   (Main, DatabaseManager, UserService, ItemService, OfferService, etc.)
-    resources/
-      items.json
-      ofertas.json
-      public/ (script.js, styles.css)
-      templates/ (mustache templates)
-README.md
-pom.xml
+```bat
+cd C:\Users\Soporte\Downloads\Reto6
+mvn -DskipTests package
 ```
 
-Database configuration (Postgres)
-The application will use PostgreSQL when you set the `DB_URL` environment variable to a Postgres JDBC URL. If `DB_URL` is not defined, the app uses an embedded H2 database located at `./data/reto6`.
+2. Configure database (only if PostgreSQL credentials differ from defaults). By default the app uses:
+- JDBC URL: jdbc:postgresql://localhost:5432/auction_store
+- DB user: postgres
+- DB password: 12345
 
-Example: your database name is `auction_store` and the password is `12345`.
+If you need to override, set environment variables before running:
 
-On Windows (cmd.exe), in the same terminal where you will run the app, execute:
-
-```cmd
-set DB_URL=jdbc:postgresql://localhost:5432/auction_store
-set DB_USER=postgres
-set DB_PASS=12345
+```bat
+set DB_URL=jdbc:postgresql://<host>:5432/auction_store
+set DB_USER=<your_db_user>
+set DB_PASSWORD=<your_db_password>
+set PORT=55603   REM optional, default is 55603
 ```
 
-To set these variables permanently for new terminals, use `setx`:
+3. Run the application (foreground):
 
-```cmd
-setx DB_URL "jdbc:postgresql://localhost:5432/auction_store"
-setx DB_USER "postgres"
-setx DB_PASS "12345"
+```bat
+java -jar target\Reto6-1.0-SNAPSHOT-shaded.jar
 ```
 
-Note: after `setx` you need to close and reopen the terminal to see the variables.
+Or run in background and save logs:
 
-Create the database (if it does not exist)
-If the `auction_store` database does not exist yet, create it with the `postgres` superuser:
-
-```cmd
-psql -U postgres -c "CREATE DATABASE auction_store;"
+```bat
+start "Reto6" /B cmd /c "java -jar target\Reto6-1.0-SNAPSHOT-shaded.jar > server.log 2>&1"
+type server.log | more
 ```
 
-(Assumes `psql` is available in your PATH. You can also create the DB with pgAdmin.)
+If the server cannot connect to the database it will log the error and exit. Make sure PostgreSQL is running and the `auction_store` database exists (or use env vars above to point to a valid DB).
 
-The application will automatically create the required tables (`users`, `items`, `offers`) the first time it starts.
+Database quick-create (psql)
+----------------------------
+If you need to create the DB and a user (run as a superuser):
 
-Build and run
-1) Build & package (from project root):
-
-```cmd
-mvn -DskipTests clean package
+```sql
+CREATE DATABASE auction_store;
+CREATE USER myuser WITH PASSWORD 'mypassword';
+GRANT ALL PRIVILEGES ON DATABASE auction_store TO myuser;
 ```
 
-2) Run the generated JAR:
+Then set `DB_USER=myuser` and `DB_PASSWORD=mypassword` before running.
 
-```cmd
-java -jar target\Reto6-1.0-SNAPSHOT.jar
-```
+API Endpoints (summary)
+-----------------------
+Users:
+- GET /users
+- GET /users/:id
+- POST /users/:id
+- PUT /users/:id
+- DELETE /users/:id
+- OPTIONS /users/:id
 
-If `DB_URL` points to PostgreSQL, the app will try to connect to Postgres on startup. Check the console logs for DatabaseManager/Hikari messages if the connection fails.
+Items (JSON API):
+- GET /api/items             -> supports query params `q`, `minPrice`, `maxPrice`
+- GET /api/items/:id
+- POST /api/items
+- PUT /api/items/:id
+- DELETE /api/items/:id
+- PATCH /api/items/:id/price -> update price and broadcast WebSocket `price_update`
 
-Useful URLs (default)
-- Web UI: http://localhost:55603/items
-- API base: http://localhost:55603/api/
-- Health check: http://localhost:55603/health
+Offers:
+- POST /api/offers
+- GET /api/offers
+- GET /api/offers/item/:itemId
 
-Endpoints and curl examples
-- List items (JSON):
+WebSocket
+---------
+- Endpoint: ws://<host>/ws/prices  (or wss:// when using HTTPS)
+- Message produced by server when price changes:
+  {
+    "type": "price_update",
+    "itemId": "item1",
+    "newPrice": "$700.00 USD",
+    "timestamp": 1234567890
+  }
 
-```cmd
+Frontend
+--------
+- Item list page: http://localhost:55603/items - supports filters in the UI and via query params
+- Item detail page: http://localhost:55603/items/:id - updates price in real-time via WebSocket
+
+Testing examples (cmd.exe)
+--------------------------
+- List items:
+```bat
 curl http://localhost:55603/api/items
 ```
 
-- Get item by id:
-
-```cmd
-curl http://localhost:55603/api/items/item1
+- Filter items:
+```bat
+curl "http://localhost:55603/api/items?minPrice=400&maxPrice=700&q=Guitarra"
 ```
 
-- List users:
-
-```cmd
-curl http://localhost:55603/users
+- Update an item price (PATCH):
+```bat
+curl -X PATCH -H "Content-Type: application/json" -d "{\"price\":\"$700.00 USD\"}" http://localhost:55603/api/items/item1/price
 ```
 
-- Create/submit an offer (example):
-
-```cmd
-curl -X POST http://localhost:55603/api/offers -H "Content-Type: application/json" -d "{\"name\":\"Sample\",\"email\":\"sample@example.com\",\"id\":\"item1\",\"amount\":120.50}"
+- Health check:
+```bat
+curl http://localhost:55603/health
 ```
-
-Expected response: `201 Created` and JSON with the created offer, or JSON with `{ "message": "..." }` in case of error.
-
-Frontend usage
-- Open `http://localhost:55603/items` in a browser.
-- Click an item to view its detail at `/items/:id`.
-- Use the "Make an Offer" button to open the offer form and submit an offer.
-
-Persistence behavior
-- Creating an offer via `/api/offers` stores the offer in the `offers` table (Postgres if configured, otherwise H2).
-- `OfferService` loads initial offers from `src/main/resources/ofertas.json` if the `offers` table is empty.
-- `DatabaseManager` loads `src/main/resources/items.json` into the `items` table if it is empty on startup.
 
 Troubleshooting
-- "No suitable driver" on startup:
-  - Ensure `DB_URL` references Postgres and the Postgres JDBC dependency is present in `pom.xml` (it is included by default). For H2 no configuration is needed.
+---------------
+- If the app exits at startup, check `server.log` or console output for DB connection errors.
+- Ensure PostgreSQL is running and credentials/DB name match or set env vars.
+- For WebSocket issues, ensure you're not running behind a proxy that blocks WS and use the correct `ws` vs `wss` protocol.
 
-- Authentication failure when connecting to Postgres:
-  - Verify `DB_USER` and `DB_PASS` and that the Postgres server process is running.
-  - Test with `psql -U <user> -h localhost -d auction_store`.
+Sprint 3 compliance
+-------------------
+This codebase includes the Sprint 3 deliverables:
+- Filters implemented in the API and UI
+- WebSocket server and client logic for real-time price updates
+- PATCH endpoint that updates DB and notifies connected clients
 
-- Items or offers not appearing:
-  - Confirm that `items.json` and `ofertas.json` exist in `src/main/resources`.
-  - Check logs: `DatabaseManager` and `OfferService` produce messages during startup.
-
-Design notes (short)
-- `DatabaseManager` uses HikariCP for connection pooling and detects Postgres via `DB_URL`. If not set, it falls back to H2 for local development.
-- `OfferService` persists offers to the `offers` table and seeds offers from `ofertas.json` if the table is empty.
-- Frontend focuses on a simple, validated client-side form that posts to `/api/offers`.
-
-Files to review / possible improvements
-- `src/main/resources/templates/public/styless.css` — looks like a typo or duplicate (`styless.css`). It's not necessary if templates reference `/styles.css` and can be removed.
-- `src/main/resources/ofertas.json` — contains sample offers for initial seeding; remove or modify if you don't want seed data.
-
-Quick test steps
-1) Build and run as shown above.
-2) In a second terminal, POST a sample offer and then GET /api/offers to verify persistence:
-
-```cmd
-curl -X POST http://localhost:55603/api/offers -H "Content-Type: application/json" -d "{\"name\":\"Test\",\"email\":\"test@ex.com\",\"id\":\"item1\",\"amount\":333.33}"
-curl http://localhost:55603/api/offers
+Commit & push to GitHub (suggested steps)
+-----------------------------------------
+```bat
+cd C:\Users\Soporte\Downloads\Reto6
+git add .
+git commit -m "Sprint 3: filters + websocket real-time price updates + README"
+git push origin main
 ```
 
-Recommended next steps (optional)
-- Remove `templates/public/styless.css` to avoid confusion.
-- Add unit tests for `OfferService` and `ItemService`.
-- Add server-side validations (email format, amount limits).
-- Push the repository to GitHub and share access with your team.
+If you want, I can generate the README commit locally and (with your guidance) help you push to GitHub.
 
-If you want me to apply any optional changes now (remove the typo CSS file, run the app locally with H2 here, etc.), tell me which option to perform and I will proceed.
+Contact / Next steps
+--------------------
+If you want I can:
+- run the app now and show the startup logs, or
+- prepare and run a small test script that exercises filters and price updates automatically, or
+- create the Git commit and push (if you're prepared to give repo details).
+
+
+---
+README generated on 2025-11-03
+

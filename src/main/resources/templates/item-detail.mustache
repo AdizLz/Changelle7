@@ -47,6 +47,7 @@
             font-size: 1.8rem;
             font-weight: 700;
             margin-bottom: 20px;
+            transition: all 0.3s ease;
         }
         .item-description {
             font-size: 1.1rem;
@@ -100,7 +101,7 @@
         }
         .btn-back:hover {
             color: #764ba2;
-            gap: 12px;
+            transform: translateX(-5px);
         }
         #offer-form {
             animation: slideDown 0.3s ease;
@@ -114,6 +115,32 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+            50% {
+                transform: scale(1.1);
+                background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            }
+        }
+        .ws-status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 15px;
+        }
+        .ws-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .ws-disconnected {
+            background: #f8d7da;
+            color: #721c24;
         }
     </style>
 </head>
@@ -135,8 +162,13 @@
                 <i class="bi bi-star-fill text-warning"></i> {{name}}
             </h1>
 
-            <div class="item-price-tag">
-                <i class="bi bi-tag-fill"></i> {{price}}
+            <div>
+                <span class="item-price-tag" id="current-price" data-item-id="{{id}}">
+                    <i class="bi bi-tag-fill"></i> {{price}}
+                </span>
+                <span class="ws-status ws-disconnected" id="ws-status">
+                    <i class="bi bi-circle-fill"></i> Desconectado
+                </span>
             </div>
 
             <div class="item-description">
@@ -144,6 +176,19 @@
                 <strong>Descripción:</strong><br>
                 {{description}}
             </div>
+
+            <!-- Información de ofertas -->
+            {{#offerCount}}
+            <div class="alert alert-info">
+                <i class="bi bi-people-fill"></i>
+                <strong>{{offerCount}}</strong> persona(s) han hecho ofertas
+                {{#highestOffer}}
+                <br>
+                <i class="bi bi-trophy-fill text-warning"></i>
+                Oferta más alta: <strong>${{highestOffer}}</strong>
+                {{/highestOffer}}
+            </div>
+            {{/offerCount}}
 
             <!-- Sección de Ofertas -->
             <div class="offer-section">
@@ -180,7 +225,7 @@
                             <i class="bi bi-currency-dollar"></i> Monto que ofreces (USD)
                         </label>
                         <input type="number" class="form-control" id="amount-input"
-                               placeholder="Ej: 750.00" step="0.01" min="0" required>
+                               placeholder="Ej: 750.00" step="0.01" min="0.01" required>
                         <small class="text-muted">
                             <i class="bi bi-lightbulb"></i> Precio actual: {{price}}
                         </small>
@@ -209,5 +254,50 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/script.js"></script>
+
+    <!-- Estado del WebSocket (usar la conexión global si existe) -->
+    <script>
+        (function () {
+            const statusElement = document.getElementById('ws-status');
+            function setStatus(connected) {
+                if (!statusElement) return;
+                statusElement.className = connected ? 'ws-status ws-connected' : 'ws-status ws-disconnected';
+                statusElement.innerHTML = '<i class="bi bi-circle-fill"></i> ' + (connected ? 'Conectado' : 'Desconectado');
+            }
+            function refreshStatus() {
+                const ws = window.__priceWs;
+                if (ws && ws.readyState === WebSocket.OPEN) setStatus(true);
+                else setStatus(false);
+            }
+            function attachToWs() {
+                const ws = window.__priceWs;
+                if (!ws) return false;
+                ws.addEventListener('open', refreshStatus);
+                ws.addEventListener('close', refreshStatus);
+                ws.addEventListener('error', refreshStatus);
+                // Primer ajuste inmediato
+                refreshStatus();
+                return true;
+            }
+            // Intentar adjuntarse al WS global; si aún no existe, reintentar unos segundos
+            if (!attachToWs()) {
+                let attempts = 0;
+                const timer = setInterval(() => {
+                    if (attachToWs() || ++attempts > 10) clearInterval(timer);
+                }, 500);
+            }
+        })();
+    </script>
+
+    <style>
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
 </body>
 </html>
