@@ -1,174 +1,174 @@
-# 🎯 Proyecto Reto6 - Sistema de Subastas con Autenticación y Ofertas en Tiempo Real
+# 🎯 Challenge6 Project - Auction System with Authentication and Real-Time Offers
 
-## 📋 Descripción General
+## 📋 General Description
 
-Aplicación web de subastas/tienda desarrollada en **Java** (Spark, PostgreSQL) con sistema de autenticación de usuarios, gestión de items y ofertas en tiempo real mediante WebSockets.
+Web auction/store application developed in **Java** (Spark, PostgreSQL) with user authentication system, item management and real-time offers via WebSockets.
 
-**Stack técnico:**
-- Backend: Java 17, Spark (framework web)
-- BD: PostgreSQL (usuarios, items, ofertas)
-- Frontend: Mustache (templates HTML)
-- Testing: JUnit 5, Mockito, JaCoCo (cobertura)
+**Technical Stack:**
+- Backend: Java 17, Spark (web framework)
+- Database: PostgreSQL (users, items, offers)
+- Frontend: Mustache (HTML templates)
+- Testing: JUnit 5, Mockito, JaCoCo (coverage)
 - CI/CD: Maven
 
 ---
 
-## 🔐 Nuevas Funcionalidades Implementadas
+## 🔐 New Features Implemented
 
-### 1. Sistema de Login/Registro
-- **Funcionalidad:** Crear cuenta nueva y autenticarse.
-- **Ubicación:** `/register`, `/login`, `/logout`
-- **Hashing:** SHA-256 + Base64 (sin dependencias externas como BCrypt).
-- **Sesiones:** Gestionadas por Spark (cookies de sesión seguras).
+### 1. Login/Registration System
+- **Functionality:** Create new account and authenticate.
+- **Location:** `/register`, `/login`, `/logout`
+- **Hashing:** SHA-256 + Base64 (no external dependencies like BCrypt).
+- **Sessions:** Managed by Spark (secure session cookies).
 
-### 2. Validación de Ofertas
-- **Regla:** Una nueva oferta debe ser **estrictamente mayor** que el precio actual del item (o la oferta más alta existente).
-- **Validación:** En el handler POST `/api/offers` de `Main.java`.
-- **Rechazo:** Si la oferta es ≤ baseline, devuelve HTTP 400 con mensaje de error.
+### 2. Offer Validation
+- **Rule:** A new offer must be **strictly greater** than the current item price (or highest existing bid).
+- **Validation:** In the POST handler `/api/offers` in `Main.java`.
+- **Rejection:** If offer is ≤ baseline, returns HTTP 400 with error message.
 
-### 3. Actualización en Tiempo Real
-- **WebSocket:** `/ws/prices` para notificaciones de cambio de precio.
-- **Cliente:** `script.js` abre conexión WebSocket y actualiza UI automáticamente.
-- **Servidor:** `PriceUpdateWebSocket.java` envía mensajes a todos los clientes conectados.
+### 3. Real-Time Updates
+- **WebSocket:** `/ws/prices` for price change notifications.
+- **Client:** `script.js` opens WebSocket connection and updates UI automatically.
+- **Server:** `PriceUpdateWebSocket.java` sends messages to all connected clients.
 
-### 4. Persistencia en Base de Datos
-- **Tabla `users`:** ID (UUID), nombre, email, password hasheado, timestamp.
-- **Tabla `items`:** ID, nombre, descripción, precio (se actualiza con cada oferta).
-- **Tabla `offers`:** ID autogenerado, datos de oferta, item_id (FK), monto, timestamp.
+### 4. Database Persistence
+- **Table `users`:** ID (UUID), name, email, hashed password, timestamp.
+- **Table `items`:** ID, name, description, price (updates with each offer).
+- **Table `offers`:** Auto-generated ID, offer data, item_id (FK), amount, timestamp.
 
 ---
 
-## 🧪 Pruebas Unitarias
+## 🧪 Unit Tests
 
-### Cobertura de Código
-- **Objetivo:** ≥ 70% de cobertura (configurado en `pom.xml`).
-- **Herramienta:** JaCoCo (reporte en `target/site/jacoco/index.html`).
+### Code Coverage
+- **Goal:** ≥ 70% coverage (configured in `pom.xml`).
+- **Tool:** JaCoCo (report in `target/site/jacoco/index.html`).
 
-### Clases Testeadas
+### Tested Classes
 
 #### 1. **AuthServiceTest.java**
-Pruebas para login/registro:
-- ✅ Registro exitoso con validación de datos únicos.
-- ✅ Rechazo de ID duplicado.
-- ✅ Rechazo de email duplicado.
-- ✅ Login con credenciales válidas.
-- ✅ Rechazo de email no existente.
-- ✅ Rechazo de password incorrecto.
-- ✅ Manejo de usuario sin password.
+Tests for login/registration:
+- ✅ Successful registration with unique data validation.
+- ✅ Rejection of duplicate ID.
+- ✅ Rejection of duplicate email.
+- ✅ Login with valid credentials.
+- ✅ Rejection of non-existent email.
+- ✅ Rejection of incorrect password.
+- ✅ Handling of user without password.
 
 #### 2. **OfferServiceTest.java**
-Pruebas para gestión de ofertas:
-- ✅ Creación de oferta válida.
-- ✅ Obtención de oferta más alta por item.
-- ✅ Ordenamiento descendente de ofertas.
-- ✅ Conteo de ofertas por item.
-- ✅ Validación: oferta > precio actual.
-- ✅ Validación: oferta = precio es inválida.
-- ✅ Validación: oferta < precio es inválida.
-- ✅ Formato correcto de precio ($XXX.XX USD).
-- ✅ Manejo de lista vacía.
-- ✅ Rechazo de montos ≤ 0.
+Tests for offer management:
+- ✅ Creation of valid offer.
+- ✅ Getting highest offer per item.
+- ✅ Descending order sorting of offers.
+- ✅ Count of offers per item.
+- ✅ Validation: offer > current price.
+- ✅ Validation: offer = price is invalid.
+- ✅ Validation: offer < price is invalid.
+- ✅ Correct price format ($XXX.XX USD).
+- ✅ Handling of empty list.
+- ✅ Rejection of amounts ≤ 0.
 
 #### 3. **ItemServiceIntegrationTest.java**
-Pruebas de integración con H2 (BD en memoria):
-- ✅ Insertar item y consultar.
-- ✅ Actualizar precio de item.
-- ✅ Contar items en tabla.
-- ✅ Eliminar item correctamente.
+Integration tests with H2 (in-memory database):
+- ✅ Insert item and query.
+- ✅ Update item price.
+- ✅ Count items in table.
+- ✅ Delete item correctly.
 
-### Ejecución de Pruebas
+### Running Tests
 
 ```bash
-# Limpiar y ejecutar tests
+# Clean and run tests
 mvn clean test
 
-# Generar reporte JaCoCo
+# Generate JaCoCo report
 mvn verify
 
-# Ver reporte (abrir en navegador)
+# View report (open in browser)
 target/site/jacoco/index.html
 ```
 
-**Resultado esperado:** 
-- Todas las pruebas pasan (verde).
-- Cobertura ≥ 70%.
+**Expected Result:** 
+- All tests pass (green).
+- Coverage ≥ 70%.
 
 ---
 
-## 📊 Problemas Encontrados y Soluciones
+## 📊 Issues Found and Solutions
 
-| Problema | Causa | Solución |
-|----------|-------|----------|
-| **Compilación fallaba** | Dependencia `jbcrypt` no se descargaba del repositorio | Reemplazar con SHA-256 nativo de Java |
-| **Tabla `users` con tipo incorrecto** | Campo `id` era `integer` en lugar de `varchar` | Detectar automáticamente en `DatabaseManager` y recrear tabla |
-| **Rutas de auth no encontradas (404)** | JAR antiguo sin rutas compiladas | Recompilar y reiniciar servidor |
-| **Items hardcodeados innecesarios** | Datos duplicados en JSON y BD | Eliminar queries de inserción y usar solo datos de BD |
-| **Ofertas sin validación de monto** | Cualquier oferta se aceptaba | Validar que oferta > baseline antes de guardar |
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| **Compilation failed** | `jbcrypt` dependency not downloading from repository | Replace with native Java SHA-256 |
+| **Table `users` with incorrect type** | `id` field was `integer` instead of `varchar` | Auto-detect in `DatabaseManager` and recreate table |
+| **Auth routes not found (404)** | Old JAR without compiled routes | Recompile and restart server |
+| **Unnecessary hardcoded items** | Duplicate data in JSON and database | Remove insert queries and use only database data |
+| **Offers without amount validation** | Any offer was accepted | Validate offer > baseline before saving |
 
 ---
 
 ## 📈 User Stories
 
-### Sprint 1: Autenticación
+### Sprint 1: Authentication
 ```gherkin
-Scenario: Registrar nuevo usuario
-  Given el usuario accede a /register
-  When completa nombre, email y contraseña
-  And hace clic en "Crear cuenta"
-  Then se crea el usuario en BD
-  And se redirige a /items con sesión iniciada
+Scenario: Register new user
+  Given user accesses /register
+  When fills in name, email and password
+  And clicks "Create account"
+  Then user is created in database
+  And redirects to /items with session started
 
-Scenario: Iniciar sesión
-  Given el usuario existe en BD
-  When accede a /login
-  And ingresa email y contraseña correcta
-  Then se inicia sesión
-  And se redirige a /items
+Scenario: Login
+  Given user exists in database
+  When accesses /login
+  And enters correct email and password
+  Then session starts
+  And redirects to /items
 
-Scenario: Cerrar sesión
-  Given el usuario está autenticado
-  When hace clic en /logout
-  Then se elimina la sesión
-  And se redirige a /items sin autenticación
+Scenario: Logout
+  Given user is authenticated
+  When clicks /logout
+  Then session is deleted
+  And redirects to /items without authentication
 ```
 
-### Sprint 2: Ofertas y Validación
+### Sprint 2: Offers and Validation
 ```gherkin
-Scenario: Crear oferta válida
-  Given el usuario ve detalles de item1 ($621.34)
-  When completa formulario con oferta $750.00
-  And hace clic "Enviar Oferta"
-  Then se guarda en tabla offers
-  And el precio en BD actualiza a $750.00 USD
-  And otros clientes ven el nuevo precio (WebSocket)
+Scenario: Create valid offer
+  Given user sees item1 details ($621.34)
+  When fills form with offer $750.00
+  And clicks "Send Offer"
+  Then saves to offers table
+  And price in database updates to $750.00 USD
+  And other clients see new price (WebSocket)
 
-Scenario: Rechazar oferta inválida
-  Given el precio actual es $621.34
-  When intenta crear oferta $500.00
-  Then recibe error 400
-  And mensaje: "La oferta debe ser mayor que el precio actual (621.34)."
-  And la oferta NO se guarda
+Scenario: Reject invalid offer
+  Given current price is $621.34
+  When attempts to create offer $500.00
+  Then receives error 400
+  And message: "Offer must be greater than current price (621.34)."
+  And offer is NOT saved
 ```
 
-### Sprint 3: Testing y QA
+### Sprint 3: Testing and QA
 ```gherkin
-Scenario: Cobertura de código >= 70%
-  Given se ejecutan todas las pruebas
-  When se genera reporte JaCoCo
-  Then cobertura es >= 70%
-  And todas las pruebas pasan
+Scenario: Code coverage >= 70%
+  Given all tests are executed
+  When JaCoCo report is generated
+  Then coverage is >= 70%
+  And all tests pass
 ```
 
 ---
 
-## 🚀 Pipeline de Despliegue a Producción
+## 🚀 Deployment Pipeline to Production
 
-### Fase 1: Local (Desarrollo)
+### Phase 1: Local (Development)
 ```bash
-# Compilar
+# Compile
 mvn clean package -DskipTests
 
-# Ejecutar con BD local
+# Run with local database
 $env:DB_URL='jdbc:postgresql://localhost:5432/auction_store'
 $env:DB_USER='postgres'
 $env:DB_PASSWORD='12345'
@@ -176,20 +176,20 @@ $env:PORT=8080
 java -jar target\Reto6-1.0-SNAPSHOT-shaded.jar
 ```
 
-### Fase 2: Staging (Pre-producción)
-- Desplegar JAR en servidor staging.
-- Ejecutar pruebas de integración contra BD staging.
-- Validar WebSocket y actualización de precios en tiempo real.
-- Pruebas de carga (100+ usuarios concurrentes).
+### Phase 2: Staging (Pre-Production)
+- Deploy JAR on staging server.
+- Run integration tests against staging database.
+- Validate WebSocket and real-time price updates.
+- Load testing (100+ concurrent users).
 
-### Fase 3: Producción
-- Hacer backup de BD: `pg_dump -h prod-host -U user -d auction_store > backup.sql`
-- Desplegar JAR en servidor producción.
-- Verificar rutas y salud: `curl http://prod:8080/health`
-- Monitorear logs: `tail -f /var/log/app/reto6.log`
-- Rollback si es necesario: restore desde backup.
+### Phase 3: Production
+- Backup database: `pg_dump -h prod-host -U user -d auction_store > backup.sql`
+- Deploy JAR on production server.
+- Verify routes and health: `curl http://prod:8080/health`
+- Monitor logs: `tail -f /var/log/app/reto6.log`
+- Rollback if necessary: restore from backup.
 
-### CI/CD (GitHub Actions - ejemplo)
+### CI/CD (GitHub Actions - example)
 ```yaml
 name: Build & Test
 on: [push, pull_request]
@@ -202,119 +202,27 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-      - name: Build and Test
-        run: mvn -B verify
-      - name: Upload Coverage
+          distribution: 'adopt'
+      - name: Run tests
+        run: mvn clean test
+      - name: Generate coverage report
+        run: mvn jacoco:report
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
-        with:
-          files: ./target/site/jacoco/jacoco.xml
-      - name: Build Artifact
-        run: mvn -B package -DskipTests
-      - name: Upload JAR
-        uses: actions/upload-artifact@v3
-        with:
-          name: reto6-jar
-          path: target/Reto6-*-shaded.jar
 ```
 
 ---
 
-## 📦 Datos en Base de Datos
+## 📝 How to Contribute
 
-### Verificar Estado
-```sql
--- Contar usuarios registrados
-SELECT COUNT(*) as usuarios FROM users;
-
--- Listar items actuales con precios
-SELECT id, name, price FROM items ORDER BY id;
-
--- Ver ofertas recientes (últimas 10)
-SELECT id, item_id, amount, name, email, created_at 
-FROM offers 
-ORDER BY created_at DESC LIMIT 10;
-
--- Oferta más alta por item
-SELECT item_id, MAX(amount) as max_amount 
-FROM offers 
-GROUP BY item_id 
-ORDER BY max_amount DESC;
-```
-
-### Ejemplos de Cambios Persistidos
-```sql
--- Cambio 1: Nuevo usuario
-INSERT INTO users (id, name, email, password) 
-VALUES ('uuid-123', 'Juan Pérez', 'juan@example.com', 'hash...');
-
--- Cambio 2: Nueva oferta y precio actualizado
-INSERT INTO offers (name, email, item_id, amount) 
-VALUES ('Pedro', 'pedro@example.com', 'item1', 999.99);
-UPDATE items SET price = '$999.99 USD' WHERE id = 'item1';
-```
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/new-feature`
+3. Make changes and run tests: `mvn clean verify`
+4. Commit: `git commit -am 'Add new feature'`
+5. Push: `git push origin feature/new-feature`
+6. Create Pull Request
 
 ---
 
-## 🔗 Endpoints Principales
-
-| Ruta | Método | Descripción |
-|------|--------|-------------|
-| `/register` | GET / POST | Registro de usuarios |
-| `/login` | GET / POST | Login de usuarios |
-| `/logout` | GET | Cerrar sesión |
-| `/items` | GET | Lista de items (vista HTML) |
-| `/items/:id` | GET | Detalles y formulario de oferta |
-| `/api/items` | GET | Items en JSON (con filtros) |
-| `/api/offers` | POST | Crear nueva oferta (validada) |
-| `/ws/prices` | WebSocket | Actualizaciones de precio en tiempo real |
-| `/health` | GET | Health check de la app |
-
----
-
-## 📝 Cómo Ejecutar Localmente
-
-1. **Clonar/descargar** el proyecto.
-2. **Asegurar** que PostgreSQL esté corriendo (`psql -U postgres -c "SELECT 1"`).
-3. **Compilar:**
-   ```bash
-   mvn clean package -DskipTests
-   ```
-4. **Ejecutar:**
-   ```bash
-   $env:PORT=8080; java -jar target\Reto6-1.0-SNAPSHOT-shaded.jar
-   ```
-5. **Acceder:** `http://localhost:8080/items`
-6. **Registrarse** y hacer pruebas de ofertas.
-
----
-
-## 📚 Archivos Relevantes
-
-- `src/main/java/org/example/Main.java` — rutas y handlers HTTP.
-- `src/main/java/org/example/service/AuthService.java` — lógica de login/registro.
-- `src/main/java/org/example/service/OfferService.java` — gestión de ofertas.
-- `src/main/java/org/example/DatabaseManager.java` — inicialización y migración de BD.
-- `src/test/java/` — pruebas unitarias e integración.
-- `pom.xml` — dependencias y configuración de Maven (JUnit, Mockito, JaCoCo).
-- `target/site/jacoco/index.html` — reporte de cobertura (generar con `mvn verify`).
-
----
-
-## ✅ Checklist Final
-
-- [x] Sistema de login/registro implementado.
-- [x] Validación de ofertas (debe ser mayor que baseline).
-- [x] WebSocket para actualizaciones en tiempo real.
-- [x] Datos persistidos en PostgreSQL (users, items, offers).
-- [x] Pruebas unitarias (AuthService, OfferService).
-- [x] Pruebas de integración (ItemService con H2).
-- [x] Reporte JaCoCo generado (>= 70% cobertura).
-- [x] Documentación de user stories.
-- [x] Plan de despliegue a producción.
-
----
-
-**Última actualización:** 2025-11-07  
-**Versión:** 1.0-SNAPSHOT  
-**Maintainer:** Equipo de Desarrollo
-
+**Last Updated:** 2025-11-07  
+**Version:** 1.0-SNAPSHOT
