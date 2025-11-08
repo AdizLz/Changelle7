@@ -271,6 +271,15 @@ public class ItemService {
         }
     }
 
+    /**
+     * Devuelve el precio actual del item como Double (ej. 621.34) o null si no está disponible.
+     */
+    public Double getPriceAsDouble(String id) {
+        Item it = get(id);
+        if (it == null) return null;
+        return parsePriceToDouble(it.getPrice());
+    }
+
     /** Actualiza solo el precio del item. Si no existe en DB pero existe en recursos, lo inserta. */
     public void updatePrice(String id, String newPrice) {
         String updateSql = "UPDATE items SET price = ? WHERE id = ?";

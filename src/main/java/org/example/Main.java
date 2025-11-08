@@ -14,12 +14,15 @@ import org.example.model.User;
 import org.example.service.ItemService;
 import org.example.service.OfferService;
 import org.example.service.UserService;
+import org.example.service.AuthService;
+import org.example.service.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.ModelAndView;
 import spark.template.mustache.MustacheTemplateEngine;
 
 import java.util.*;
+import java.util.UUID;
 
 /**
  * Servidor principal del sistema de subastas con SparkJava, PostgreSQL y Mustache.
@@ -72,9 +75,82 @@ public class Main {
         UserService userService = new UserService();
         ItemService itemService = new ItemService();
         OfferService offerService = new OfferService();
+        AuthService authService = new AuthService(userService);
+        SessionManager sessionManager = new SessionManager(userService);
 
         // Archivos estáticos (CSS/JS)
         staticFiles.location("/public");
+
+        // Rutas de autenticación (HTML)
+        get("/login", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+            Object err = req.session(false) != null ? req.session().attribute("loginError") : null;
+            if (err != null) {
+                model.put("error", err);
+                req.session().removeAttribute("loginError");
+            }
+            model.put("currentUser", sessionManager.getLoggedUser(req));
+            return new ModelAndView(model, "login.mustache");
+        }, new MustacheTemplateEngine());
+
+        post("/login", (req, res) -> {
+            String email = req.queryParams("email");
+            String password = req.queryParams("password");
+            if (email == null || password == null) {
+                req.session(true).attribute("loginError", "Email y password son requeridos");
+                res.redirect("/login");
+                return null;
+            }
+            User u = authService.login(email, password);
+            if (u == null) {
+                req.session(true).attribute("loginError", "Credenciales inválidas");
+                res.redirect("/login");
+                return null;
+            }
+            sessionManager.loginUser(req, u);
+            res.redirect("/items");
+            return null;
+        });
+
+        get("/register", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+            // Mostrar errores de registro si existen en la sesión
+            Object regErr = req.session(false) != null ? req.session().attribute("registerError") : null;
+            if (regErr != null) {
+                model.put("registerError", regErr);
+                req.session().removeAttribute("registerError");
+            }
+            model.put("currentUser", sessionManager.getLoggedUser(req));
+            return new ModelAndView(model, "register.mustache");
+        }, new MustacheTemplateEngine());
+
+        post("/register", (req, res) -> {
+            String name = req.queryParams("name");
+            String email = req.queryParams("email");
+            String password = req.queryParams("password");
+            if (name == null || email == null || password == null) {
+                req.session(true).attribute("registerError", "name,email,password son requeridos");
+                res.redirect("/register");
+                return null;
+            }
+            try {
+                String id = UUID.randomUUID().toString();
+                User user = authService.register(id, name, email, password);
+                sessionManager.loginUser(req, user);
+                res.redirect("/items");
+                return null;
+            } catch (IllegalArgumentException ex) {
+                req.session(true).attribute("registerError", ex.getMessage());
+                res.redirect("/register");
+                return null;
+            }
+        });
+
+        get("/logout", (req, res) -> {
+            sessionManager.logout(req);
+            res.redirect("/items");
+            return null;
+        });
 
         // ===============================
         // 📡 RUTAS JSON (API REST)
@@ -300,6 +376,17 @@ public class Main {
                         return gson.toJson(new Message("Item not found"));
                     }
 
+                    // VALIDACIÓN: la oferta debe ser estrictamente mayor que el precio actual
+                    Double currentPrice = itemService.getPriceAsDouble(offer.getId());
+                    Offer highestExisting = offerService.getHighestOffer(offer.getId());
+                    double highestOfferAmount = highestExisting != null ? highestExisting.getAmount() : 0.0;
+                    double baseline = Math.max(currentPrice != null ? currentPrice : 0.0, highestOfferAmount);
+                    if (offer.getAmount() <= baseline) {
+                        res.status(400);
+                        String msg = String.format("La oferta debe ser mayor que el precio actual (%.2f).", baseline);
+                        return gson.toJson(new Message(msg));
+                    }
+
                     // Guardar la oferta
                     offerService.add(offer);
 
@@ -312,11 +399,12 @@ public class Main {
                     // Notificar a través de WebSocket
                     PriceUpdateWebSocket.notifyPriceChange(offer.getId(), newPrice);
 
-                    // Devolver respuesta con el precio actualizado
+                    // Devolver respuesta con el precio actualizado y la oferta guardada
                     Map<String, Object> response = new HashMap<>();
                     response.put("success", true);
                     response.put("message", "Offer accepted");
                     response.put("newPrice", newPrice);
+                    response.put("offer", offer); // contiene dbId si se generó
 
                     res.status(201);
                     return gson.toJson(response);
@@ -366,6 +454,7 @@ public class Main {
             } else {
                 model.put("items", itemService.getAll());
             }
+            model.put("currentUser", sessionManager.getLoggedUser(req));
             return new ModelAndView(model, "items-list.mustache");
         }, new MustacheTemplateEngine());
 
@@ -381,6 +470,7 @@ public class Main {
                 res.status(404);
                 model.put("name", "Item no encontrado");
                 model.put("errorMessage", "Item con id '" + id + "' no fue encontrado.");
+                model.put("currentUser", sessionManager.getLoggedUser(req));
                 return new ModelAndView(model, "item-detail.mustache");
             }
 
@@ -392,6 +482,7 @@ public class Main {
             model.put("offerCount", offers.size());
             Offer highest = offerService.getHighestOffer(id);
             if (highest != null) model.put("highestOffer", highest.getAmount());
+            model.put("currentUser", sessionManager.getLoggedUser(req));
             return new ModelAndView(model, "item-detail.mustache");
         }, new MustacheTemplateEngine());
 
@@ -411,6 +502,7 @@ public class Main {
 
             model.put("offers", viewOffers);
             model.put("totalOffers", viewOffers.size());
+            model.put("currentUser", sessionManager.getLoggedUser(req));
             return new ModelAndView(model, "offers-list.mustache");
         }, new MustacheTemplateEngine());
 

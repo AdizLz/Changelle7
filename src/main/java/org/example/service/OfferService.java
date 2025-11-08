@@ -38,7 +38,8 @@ public class OfferService {
             if (rows > 0) {
                 try (ResultSet rs = pstmt.getGeneratedKeys()) {
                     if (rs.next()) {
-                        int generatedId = rs.getInt(1);
+                        long generatedId = rs.getLong(1);
+                        offer.setDbId(generatedId); // guardar en el objeto
                         logger.info("✅ Oferta creada con ID: {} para item: {}", generatedId, offer.getId());
                     }
                 }
@@ -83,7 +84,7 @@ public class OfferService {
      */
     private List<Offer> getOffersFromDatabase() {
         List<Offer> offers = new ArrayList<>();
-        String sql = "SELECT name, email, item_id, amount, created_at FROM offers ORDER BY created_at DESC";
+        String sql = "SELECT id AS offer_db_id, name, email, item_id, amount, created_at FROM offers ORDER BY created_at DESC";
 
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
@@ -91,6 +92,7 @@ public class OfferService {
 
             while (rs.next()) {
                 Offer offer = new Offer();
+                offer.setDbId(rs.getLong("offer_db_id"));
                 offer.setName(rs.getString("name"));
                 offer.setEmail(rs.getString("email"));
                 offer.setId(rs.getString("item_id"));
@@ -142,7 +144,7 @@ public class OfferService {
         }
 
         // 2. Obtener ofertas de PostgreSQL para ese item
-        String sql = "SELECT name, email, item_id, amount FROM offers WHERE item_id = ? ORDER BY amount DESC";
+        String sql = "SELECT id AS offer_db_id, name, email, item_id, amount FROM offers WHERE item_id = ? ORDER BY amount DESC";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -152,6 +154,7 @@ public class OfferService {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     Offer offer = new Offer();
+                    offer.setDbId(rs.getLong("offer_db_id"));
                     offer.setName(rs.getString("name"));
                     offer.setEmail(rs.getString("email"));
                     offer.setId(rs.getString("item_id"));
@@ -196,3 +199,4 @@ public class OfferService {
         return getByItemId(itemId).size();
     }
 }
+

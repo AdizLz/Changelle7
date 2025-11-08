@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -83,48 +84,67 @@ public class DatabaseManager {
     private static void createTables() {
         logger.info("Creando tablas...");
 
-        String createUsersTable = """
-            CREATE TABLE IF NOT EXISTS users (
-                id VARCHAR(50) PRIMARY KEY,
-                name VARCHAR(100) NOT NULL,
-                email VARCHAR(100) NOT NULL UNIQUE,
-                password VARCHAR(255),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """;
-
-        String createItemsTable = """
-            CREATE TABLE IF NOT EXISTS items (
-                id VARCHAR(50) PRIMARY KEY,
-                name VARCHAR(200) NOT NULL,
-                description TEXT,
-                price VARCHAR(50),
-                image_url VARCHAR(500),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """;
-
-        String createOffersTable = """
-            CREATE TABLE IF NOT EXISTS offers (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR(100) NOT NULL,
-                email VARCHAR(100) NOT NULL,
-                item_id VARCHAR(50) NOT NULL,
-                amount DECIMAL(10, 2) NOT NULL,
-                status VARCHAR(20) DEFAULT 'pending',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
-            )
-        """;
-
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
+
+            // Verificar y reconstruir tabla users si tiene estructura incorrecta
+            try {
+                // Intenta verificar si la tabla existe y tiene la columna id como VARCHAR
+                ResultSet rs = stmt.executeQuery(
+                    "SELECT column_name, data_type FROM information_schema.columns WHERE table_name='users' AND column_name='id'"
+                );
+                if (rs.next()) {
+                    String dataType = rs.getString("data_type");
+                    if (!dataType.toLowerCase().contains("character")) {
+                        // Si id no es VARCHAR, recrear la tabla
+                        logger.warn("⚠️ Tabla 'users' tiene estructura incorrecta. Recreando...");
+                        stmt.execute("DROP TABLE IF EXISTS users CASCADE");
+                    }
+                }
+            } catch (Exception ex) {
+                logger.debug("No se pudo verificar estructura de users: {}", ex.getMessage());
+            }
+
+            // Crear tabla users
+            String createUsersTable = """
+                CREATE TABLE IF NOT EXISTS users (
+                    id VARCHAR(50) PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    email VARCHAR(100) NOT NULL UNIQUE,
+                    password VARCHAR(255),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                """;
+
+            String createItemsTable = """
+                CREATE TABLE IF NOT EXISTS items (
+                    id VARCHAR(50) PRIMARY KEY,
+                    name VARCHAR(200) NOT NULL,
+                    description TEXT,
+                    price VARCHAR(50),
+                    image_url VARCHAR(500),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                """;
+
+            String createOffersTable = """
+                CREATE TABLE IF NOT EXISTS offers (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    email VARCHAR(100) NOT NULL,
+                    item_id VARCHAR(50) NOT NULL,
+                    amount DECIMAL(10, 2) NOT NULL,
+                    status VARCHAR(20) DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
+                )
+                """;
 
             stmt.execute(createUsersTable);
             stmt.execute(createItemsTable);
             stmt.execute(createOffersTable);
 
-            logger.info("Tablas creadas correctamente");
+            logger.info("✅ Tablas creadas/verificadas correctamente");
 
         } catch (SQLException e) {
             logger.error("Error al crear tablas", e);
@@ -147,64 +167,14 @@ public class DatabaseManager {
             int count = rs.getInt(1);
 
             if (count > 0) {
-                logger.info("Los items ya están cargados ({} items)", count);
+                logger.info("✅ Los items ya están cargados en la BD ({} items)", count);
                 return;
             }
 
-            // Insertar items desde el JSON
-            String[] insertQueries = {
-                    """
-                INSERT INTO items (id, name, description, price) VALUES 
-                ('item1', 'Gorra autografiada por Peso Pluma', 
-                 'Una gorra autografiada por el famoso Peso Pluma.', 
-                 '$621.34 USD')
-                """,
-                    """
-                INSERT INTO items (id, name, description, price) VALUES 
-                ('item2', 'Casco autografiado por Rosalía', 
-                 'Un casco autografiado por la famosa cantante Rosalía, una verdadera MOTOMAMI!', 
-                 '$734.57 USD')
-                """,
-                    """
-                INSERT INTO items (id, name, description, price) VALUES 
-                ('item3', 'Chamarra de Bad Bunny', 
-                 'Una chamarra de la marca favorita de Bad Bunny, autografiada por el propio artista.', 
-                 '$521.89 USD')
-                """,
-                    """
-                INSERT INTO items (id, name, description, price) VALUES 
-                ('item4', 'Guitarra de Fernando Delgadillo', 
-                 'Una guitarra acústica de alta calidad utilizada por el famoso cantautor Fernando Delgadillo.', 
-                 '$823.12 USD')
-                """,
-                    """
-                INSERT INTO items (id, name, description, price) VALUES 
-                ('item5', 'Jersey firmado por Snoop Dogg', 
-                 'Un jersey autografiado por el legendario rapero Snoop Dogg.', 
-                 '$355.67 USD')
-                """,
-                    """
-                INSERT INTO items (id, name, description, price) VALUES 
-                ('item6', 'Prenda de Cardi B autografiada', 
-                 'Un crop-top usado y autografiado por la famosa rapera Cardi B. en su última visita a México', 
-                 '$674.23 USD')
-                """,
-                    """
-                INSERT INTO items (id, name, description, price) VALUES 
-                ('item7', 'Guitarra autografiada por Coldplay', 
-                 'Una guitarra eléctrica autografiada por la popular banda británica Coldplay, un día antes de su concierto en Monterrey en 2022.', 
-                 '$458.91 USD')
-                """
-            };
-
-            for (String query : insertQueries) {
-                stmt.execute(query);
-            }
-
-            logger.info("Items cargados correctamente (7 items)");
+            logger.info("⚠️ No hay items en la BD. Por favor, carga los items manualmente en la tabla 'items'.");
 
         } catch (SQLException e) {
-            logger.warn("Error al cargar datos iniciales: {}", e.getMessage());
+            logger.warn("Error al verificar datos iniciales: {}", e.getMessage());
         }
     }
 

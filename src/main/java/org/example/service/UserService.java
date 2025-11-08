@@ -45,7 +45,7 @@ public class UserService {
      * Obtiene un usuario por ID
      */
     public User get(String id) {
-        String sql = "SELECT id, name, email FROM users WHERE id = ?";
+        String sql = "SELECT id, name, email, password FROM users WHERE id = ?";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -58,6 +58,7 @@ public class UserService {
                     user.setId(rs.getString("id"));
                     user.setName(rs.getString("name"));
                     user.setEmail(rs.getString("email"));
+                    user.setPassword(rs.getString("password"));
 
                     logger.debug("✅ Usuario encontrado: {}", id);
                     return user;
@@ -76,7 +77,7 @@ public class UserService {
      * Agrega un nuevo usuario
      */
     public void add(User user) {
-        String sql = "INSERT INTO users (id, name, email) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO users (id, name, email, password) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -84,6 +85,7 @@ public class UserService {
             pstmt.setString(1, user.getId());
             pstmt.setString(2, user.getName());
             pstmt.setString(3, user.getEmail());
+            pstmt.setString(4, user.getPassword());
 
             int rows = pstmt.executeUpdate();
 
@@ -204,5 +206,34 @@ public class UserService {
         }
 
         return users;
+    }
+
+    /**
+     * Busca usuario por email (para login)
+     */
+    public User findByEmail(String email) {
+        String sql = "SELECT id, name, email, password FROM users WHERE email = ? LIMIT 1";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, email);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    User user = new User();
+                    user.setId(rs.getString("id"));
+                    user.setName(rs.getString("name"));
+                    user.setEmail(rs.getString("email"));
+                    user.setPassword(rs.getString("password"));
+                    return user;
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("❌ Error al buscar usuario por email: {}", email, e);
+        }
+
+        return null;
     }
 }

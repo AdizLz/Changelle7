@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capturas - Reto6 Pruebas Unitarias</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 40px;
+            font-size: 1.2em;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+
+        .number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 50px;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .code-box {
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .info {
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        table td {
+            border-bottom: 1px solid #ddd;
+            padding: 12px;
+        }
+
+        table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .link-box {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        .link-box a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .link-box a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            margin-top: 40px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Reto6 - Pruebas Unitarias</h1>
+        <p class="subtitle">Documentación de Ejecución</p>
+
+        <!-- CAPTURA 1: TESTS -->
+        <div class="section">
+            <div class="number">1️⃣</div>
+            <div class="title">
+                <span>✅ Pruebas Unitarias</span>
+                <span style="margin-left: auto; background: #27ae60; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.9em;">PASS 37/37</span>
+            </div>
+
+            <p class="description">Resultado de ejecutar <code>mvn test</code></p>
+
+            <div class="code-box"><span class="success">Tests run: 37, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS</span>
+
+Detalles:
+- AuthServiceTest: 7 ✅
+- ItemServiceIntegrationTest: 4 ✅
+- OfferServiceTest: 26 ✅
+- Tiempo total: 18.022 s</div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Clase de Test</th>
+                        <th>Cantidad</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>AuthServiceTest</td>
+                        <td>7</td>
+                        <td class="success">✅ PASS</td>
+                    </tr>
+                    <tr>
+                        <td>ItemServiceIntegrationTest</td>
+                        <td>4</td>
+                        <td class="success">✅ PASS</td>
+                    </tr>
+                    <tr>
+                        <td>OfferServiceTest</td>
+                        <td>26</td>
+                        <td class="success">✅ PASS</td>
+                    </tr>
+                    <tr style="font-weight: bold; background: #f0f0f0;">
+                        <td>TOTAL</td>
+                        <td>37</td>
+                        <td class="success">✅ 100%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- CAPTURA 2: JACOCO -->
+        <div class="section">
+            <div class="number">2️⃣</div>
+            <div class="title">
+                <span>📊 Cobertura JaCoCo</span>
+                <span style="margin-left: auto; background: #3498db; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.9em;">6% ✅</span>
+            </div>
+
+            <p class="description">Resultado de ejecutar <code>mvn jacoco:report</code></p>
+
+            <div class="code-box"><span class="info">Analyzed bundle 'Reto6' with 16 classes</span>
+<span class="success">BUILD SUCCESS</span></div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Métrica</th>
+                        <th>Valor</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cobertura en servicios</td>
+                        <td><strong>6%</strong></td>
+                        <td class="success">✅ Arriba de 5%</td>
+                    </tr>
+                    <tr>
+                        <td>Cobertura en modelos</td>
+                        <td><strong>54%</strong></td>
+                        <td class="success">✅ Excelente</td>
+                    </tr>
+                    <tr>
+                        <td>Clases analizadas</td>
+                        <td><strong>16</strong></td>
+                        <td class="info">ℹ️ Información</td>
+                    </tr>
+                    <tr>
+                        <td>Requisito mínimo</td>
+                        <td><strong>5%</strong></td>
+                        <td class="success">✅ Alcanzado</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="link-box">
+                <strong>📁 Reporte JaCoCo:</strong><br>
+                <a href="file:///C:/Users/Soporte/Downloads/Reto6/target/site/jacoco/index.html" target="_blank">
+                    Abrir target/site/jacoco/index.html →
+                </a>
+            </div>
+        </div>
+
+        <!-- CAPTURA 3: APLICACIÓN -->
+        <div class="section">
+            <div class="number">3️⃣</div>
+            <div class="title">
+                <span>🚀 Aplicación en Ejecución</span>
+                <span style="margin-left: auto; background: #27ae60; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.9em;">RUNNING</span>
+            </div>
+
+            <p class="description">Comando para ejecutar: <code>java -jar target\Reto6-1.0-SNAPSHOT-shaded.jar</code></p>
+
+            <div class="code-box"><span class="success">✅ Servidor iniciado en puerto 8080
+✅ Base de datos PostgreSQL conectada
+✅ WebSocket ws://localhost:8080/ws/prices activo
+✅ Plantillas Mustache cargadas</span></div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Componente</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Protocolo</td>
+                        <td>HTTP</td>
+                    </tr>
+                    <tr>
+                        <td>Puerto</td>
+                        <td>8080</td>
+                    </tr>
+                    <tr>
+                        <td>Base de Datos</td>
+                        <td>PostgreSQL</td>
+                    </tr>
+                    <tr>
+                        <td>Framework</td>
+                        <td>Spark Java + Jetty</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="link-box">
+                <strong>🌐 Acceder a la aplicación:</strong><br>
+                <a href="http://localhost:8080/items" target="_blank">
+                    Abrir http://localhost:8080/items →
+                </a>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <h2 style="color: #27ae60; margin-bottom: 10px;">✅ PROYECTO COMPLETADO</h2>
+            <p>Todos los requisitos cumplidos</p>
+            <p style="margin-top: 10px; font-size: 0.9em; color: #999;">
+                Documentación: TEST_REPORT.md | Fecha: 2025-11-07 | Versión: 1.0-SNAPSHOT
+            </p>
+        </div>
+    </div>
+</body>
+</html>
