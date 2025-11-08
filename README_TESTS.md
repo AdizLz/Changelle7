@@ -1,6 +1,6 @@
 # 🎯 Challenge6 Project - Auction System with Authentication and Real-Time Offers
 
-## 📋 General Description
+##  General Description
 
 Web auction/store application developed in **Java** (Spark, PostgreSQL) with user authentication system, item management and real-time offers via WebSockets.
 
@@ -13,7 +13,7 @@ Web auction/store application developed in **Java** (Spark, PostgreSQL) with use
 
 ---
 
-## 🔐 New Features Implemented
+##  New Features Implemented
 
 ### 1. Login/Registration System
 - **Functionality:** Create new account and authenticate.
@@ -38,7 +38,7 @@ Web auction/store application developed in **Java** (Spark, PostgreSQL) with use
 
 ---
 
-## 🧪 Unit Tests
+##  Unit Tests
 
 ### Code Coverage
 - **Goal:** ≥ 70% coverage (configured in `pom.xml`).
@@ -70,7 +70,7 @@ Tests for offer management:
 - ✅ Rejection of amounts ≤ 0.
 
 #### 3. **ItemServiceIntegrationTest.java**
-Integration tests with H2 (in-memory database):
+Integration tests (in-memory database):
 - ✅ Insert item and query.
 - ✅ Update item price.
 - ✅ Count items in table.
@@ -95,7 +95,7 @@ target/site/jacoco/index.html
 
 ---
 
-## 📊 Issues Found and Solutions
+## Issues Found and Solutions
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
@@ -107,61 +107,7 @@ target/site/jacoco/index.html
 
 ---
 
-## 📈 User Stories
-
-### Sprint 1: Authentication
-```gherkin
-Scenario: Register new user
-  Given user accesses /register
-  When fills in name, email and password
-  And clicks "Create account"
-  Then user is created in database
-  And redirects to /items with session started
-
-Scenario: Login
-  Given user exists in database
-  When accesses /login
-  And enters correct email and password
-  Then session starts
-  And redirects to /items
-
-Scenario: Logout
-  Given user is authenticated
-  When clicks /logout
-  Then session is deleted
-  And redirects to /items without authentication
-```
-
-### Sprint 2: Offers and Validation
-```gherkin
-Scenario: Create valid offer
-  Given user sees item1 details ($621.34)
-  When fills form with offer $750.00
-  And clicks "Send Offer"
-  Then saves to offers table
-  And price in database updates to $750.00 USD
-  And other clients see new price (WebSocket)
-
-Scenario: Reject invalid offer
-  Given current price is $621.34
-  When attempts to create offer $500.00
-  Then receives error 400
-  And message: "Offer must be greater than current price (621.34)."
-  And offer is NOT saved
-```
-
-### Sprint 3: Testing and QA
-```gherkin
-Scenario: Code coverage >= 70%
-  Given all tests are executed
-  When JaCoCo report is generated
-  Then coverage is >= 70%
-  And all tests pass
-```
-
----
-
-## 🚀 Deployment Pipeline to Production
+##  Deployment Pipeline to Production
 
 ### Phase 1: Local (Development)
 ```bash
