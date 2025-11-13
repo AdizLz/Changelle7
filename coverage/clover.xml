@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1762843989863" clover="3.2.0">
+  <project timestamp="1762843989863" name="All files">
+    <metrics statements="43" coveredstatements="42" conditionals="34" coveredconditionals="32" methods="9" coveredmethods="9" elements="86" coveredelements="83" complexity="0" loc="43" ncloc="43" packages="1" files="1" classes="1"/>
+    <file name="graphRenderer.js" path="C:\Users\Soporte\Downloads\Reto6\src\js\graphRenderer.js">
+      <metrics statements="43" coveredstatements="42" conditionals="34" coveredconditionals="32" methods="9" coveredmethods="9"/>
+      <line num="3" count="44" type="stmt"/>
+      <line num="7" count="11" type="cond" truecount="7" falsecount="1"/>
+      <line num="8" count="0" type="stmt"/>
+      <line num="10" count="11" type="stmt"/>
+      <line num="11" count="11" type="stmt"/>
+      <line num="12" count="11" type="stmt"/>
+      <line num="13" count="11" type="stmt"/>
+      <line num="14" count="11" type="stmt"/>
+      <line num="15" count="11" type="stmt"/>
+      <line num="16" count="11" type="stmt"/>
+      <line num="17" count="11" type="stmt"/>
+      <line num="18" count="11" type="stmt"/>
+      <line num="19" count="11" type="stmt"/>
+      <line num="23" count="7" type="cond" truecount="2" falsecount="0"/>
+      <line num="24" count="6" type="cond" truecount="5" falsecount="0"/>
+      <line num="25" count="1" type="stmt"/>
+      <line num="27" count="5" type="stmt"/>
+      <line num="28" count="11" type="cond" truecount="6" falsecount="0"/>
+      <line num="29" count="1" type="stmt"/>
+      <line num="31" count="10" type="stmt"/>
+      <line num="32" count="10" type="stmt"/>
+      <line num="33" count="6" type="stmt"/>
+      <line num="37" count="6" type="cond" truecount="4" falsecount="0"/>
+      <line num="38" count="5" type="stmt"/>
+      <line num="42" count="5" type="cond" truecount="2" falsecount="0"/>
+      <line num="43" count="4" type="cond" truecount="1" falsecount="1"/>
+      <line num="44" count="4" type="cond" truecount="2" falsecount="0"/>
+      <line num="46" count="3" type="stmt"/>
+      <line num="47" count="3" type="stmt"/>
+      <line num="49" count="3" type="stmt"/>
+      <line num="50" count="7" type="stmt"/>
+      <line num="52" count="3" type="cond" truecount="2" falsecount="0"/>
+      <line num="53" count="1" type="stmt"/>
+      <line num="54" count="1" type="stmt"/>
+      <line num="55" count="1" type="stmt"/>
+      <line num="56" count="1" type="stmt"/>
+      <line num="59" count="2" type="stmt"/>
+      <line num="60" count="4" type="stmt"/>
+      <line num="61" count="4" type="stmt"/>
+      <line num="62" count="4" type="stmt"/>
+      <line num="65" count="2" type="stmt"/>
+      <line num="66" count="2" type="stmt"/>
+      <line num="69" count="1" type="stmt"/>
+    </file>
+  </project>
+</coverage>

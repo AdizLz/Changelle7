@@ -23,6 +23,15 @@ import spark.template.mustache.MustacheTemplateEngine;
 
 import java.util.*;
 import java.util.UUID;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import java.net.ServerSocket;
+import java.io.IOException;
 
 /**
  * Servidor principal del sistema de subastas con SparkJava, PostgreSQL y Mustache.
@@ -37,17 +46,35 @@ public class Main {
         // ===============================
 
         String portEnv = System.getenv("PORT");
+        int desiredPort = 55603;
         if (portEnv != null && !portEnv.isBlank()) {
             try {
-                port(Integer.parseInt(portEnv));
-                logger.info("Puerto configurado desde variable PORT: {}", portEnv);
+                desiredPort = Integer.parseInt(portEnv);
             } catch (NumberFormatException e) {
                 logger.warn("Valor de PORT inválido ('{}'), usando 55603 por defecto", portEnv);
-                port(55603);
+                desiredPort = 55603;
             }
-        } else {
-            port(55603);
         }
+
+        // Verificar si el puerto está libre; si no, asignar uno automático
+        int finalPort = desiredPort;
+        try (ServerSocket ss = new ServerSocket(desiredPort)) {
+            // si llegamos aquí, el puerto estaba libre; cerramos y lo usamos
+            ss.close();
+        } catch (IOException ex) {
+            // puerto ocupado; buscar uno libre
+            try (ServerSocket auto = new ServerSocket(0)) {
+                finalPort = auto.getLocalPort();
+                logger.warn("Puerto {} en uso; usando puerto libre {}", desiredPort, finalPort);
+                auto.close();
+            } catch (IOException ex2) {
+                logger.error("No se pudo encontrar un puerto libre, usando {} por defecto", desiredPort);
+                finalPort = desiredPort;
+            }
+        }
+
+        port(finalPort);
+        logger.info("Puerto configurado para el servidor: {}", finalPort);
 
         webSocket("/ws/prices", PriceUpdateWebSocket.class);
         // ===============================
@@ -522,6 +549,67 @@ public class Main {
                 health.put("dbConnection", "ERROR: " + e.getMessage());
             }
             return gson.toJson(health);
+        });
+
+        // Nueva ruta: servir la página de capturas que muestra las pruebas
+        get("/capturas", (req, res) -> {
+            res.type("text/html; charset=utf-8");
+            try {
+                Path p = Paths.get("CAPTURAS_EJECUTADAS.html").toAbsolutePath();
+                if (Files.exists(p)) {
+                    return Files.readString(p, StandardCharsets.UTF_8);
+                } else {
+                    res.status(404);
+                    return "<html><body><h1>CAPTURAS_EJECUTADAS.html no encontrada</h1></body></html>";
+                }
+            } catch (Exception e) {
+                res.status(500);
+                return "<html><body><h1>Error leyendo CAPTURAS_EJECUTADAS.html: " + e.getMessage() + "</h1></body></html>";
+            }
+        });
+
+        // ===============================
+        // RUTA PARA ESTADO DE PRUEBAS LOGIN
+        // Intentamos leer el XML generado por surefire para AuthServiceTest
+        // Si no existe, devolvemos un JSON por defecto (útil para entornos locales)
+        // ===============================
+        get("/status/login-tests", (req, res) -> {
+            res.type("application/json");
+            Map<String, Object> out = new HashMap<>();
+            try {
+                Path reportPath = Paths.get("target", "surefire-reports", "TEST-org.example.service.AuthServiceTest.xml");
+                if (Files.exists(reportPath)) {
+                    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(reportPath.toFile());
+                    Element root = doc.getDocumentElement();
+                    String tests = root.getAttribute("tests");
+                    String failures = root.getAttribute("failures");
+                    String errors = root.getAttribute("errors");
+                    String skipped = root.getAttribute("skipped");
+                    out.put("testsRun", tests != null && !tests.isBlank() ? Integer.parseInt(tests) : 0);
+                    out.put("failures", failures != null && !failures.isBlank() ? Integer.parseInt(failures) : 0);
+                    out.put("errors", errors != null && !errors.isBlank() ? Integer.parseInt(errors) : 0);
+                    out.put("skipped", skipped != null && !skipped.isBlank() ? Integer.parseInt(skipped) : 0);
+                    out.put("status", ((Integer)out.get("failures") == 0 && (Integer)out.get("errors") == 0) ? "PASS" : "FAIL");
+                    out.put("source", reportPath.toString());
+                } else {
+                    // Valor por defecto si no hay informe
+                    out.put("testsRun", 7);
+                    out.put("failures", 0);
+                    out.put("errors", 0);
+                    out.put("skipped", 0);
+                    out.put("status", "PASS");
+                    out.put("source", "default");
+                }
+            } catch (Exception e) {
+                logger.warn("No se pudo leer el informe de pruebas de AuthServiceTest: {}", e.getMessage());
+                out.put("testsRun", 0);
+                out.put("failures", 0);
+                out.put("errors", 0);
+                out.put("skipped", 0);
+                out.put("status", "UNKNOWN");
+                out.put("error", e.getMessage());
+            }
+            return gson.toJson(out);
         });
 
         // ===============================

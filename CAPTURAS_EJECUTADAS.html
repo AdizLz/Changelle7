@@ -168,12 +168,12 @@
             <div class="number">1️⃣</div>
             <div class="title">
                 <span>✅ Pruebas Unitarias</span>
-                <span style="margin-left: auto; background: #27ae60; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.9em;">PASS 37/37</span>
+                <span id="login-status-badge" style="margin-left: auto; background: #27ae60; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.9em;">PASS 37/37</span>
             </div>
 
             <p class="description">Resultado de ejecutar <code>mvn test</code></p>
 
-            <div class="code-box"><span class="success">Tests run: 37, Failures: 0, Errors: 0, Skipped: 0
+            <div id="login-code" class="code-box"><span class="success">Tests run: 37, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS</span>
 
 Detalles:
@@ -193,8 +193,8 @@ Detalles:
                 <tbody>
                     <tr>
                         <td>AuthServiceTest</td>
-                        <td>7</td>
-                        <td class="success">✅ PASS</td>
+                        <td id="auth-count">7</td>
+                        <td id="auth-status" class="success">✅ PASS</td>
                     </tr>
                     <tr>
                         <td>ItemServiceIntegrationTest</td>
@@ -262,7 +262,7 @@ Detalles:
 
             <div class="link-box">
                 <strong>📁 Reporte JaCoCo:</strong><br>
-                <a href="file:///C:/Users/Soporte/Downloads/Reto6/target/site/jacoco/index.html" target="_blank">
+                <a href="target/site/jacoco/index.html" target="_blank">
                     Abrir target/site/jacoco/index.html →
                 </a>
             </div>
@@ -278,9 +278,9 @@ Detalles:
 
             <p class="description">Comando para ejecutar: <code>java -jar target\Reto6-1.0-SNAPSHOT-shaded.jar</code></p>
 
-            <div class="code-box"><span class="success">✅ Servidor iniciado en puerto 8080
+            <div class="code-box"><span class="success">✅ Servidor iniciado en puerto 55603
 ✅ Base de datos PostgreSQL conectada
-✅ WebSocket ws://localhost:8080/ws/prices activo
+✅ WebSocket ws://localhost:55603/ws/prices activo
 ✅ Plantillas Mustache cargadas</span></div>
 
             <table>
@@ -297,7 +297,7 @@ Detalles:
                     </tr>
                     <tr>
                         <td>Puerto</td>
-                        <td>8080</td>
+                        <td>55603 (o automático si está ocupado)</td>
                     </tr>
                     <tr>
                         <td>Base de Datos</td>
@@ -312,8 +312,12 @@ Detalles:
 
             <div class="link-box">
                 <strong>🌐 Acceder a la aplicación:</strong><br>
-                <a href="http://localhost:8080/items" target="_blank">
-                    Abrir http://localhost:8080/items →
+                <a href="http://localhost:55603/items" target="_blank">
+                    Abrir http://localhost:55603/items →
+                </a><br><br>
+                <strong>📊 Ver pruebas de login:</strong><br>
+                <a href="http://localhost:55603/capturas" target="_blank">
+                    Abrir http://localhost:55603/capturas →
                 </a>
             </div>
         </div>
@@ -327,5 +331,57 @@ Detalles:
             </p>
         </div>
     </div>
+
+    <script>
+        // Al cargar la página, obtenemos el estado de las pruebas de login y actualizamos la tarjeta
+        document.addEventListener('DOMContentLoaded', function() {
+            function updateLoginCard(data) {
+                try {
+                    const badge = document.getElementById('login-status-badge');
+                    const codeBox = document.getElementById('login-code');
+                    const authCount = document.getElementById('auth-count');
+                    const authStatus = document.getElementById('auth-status');
+
+                    if (!badge || !codeBox || !authCount || !authStatus) return;
+
+                    const tests = data.testsRun ?? 0;
+                    const failures = data.failures ?? 0;
+                    const errors = data.errors ?? 0;
+                    const skipped = data.skipped ?? 0;
+                    const status = data.status ?? 'UNKNOWN';
+
+                    badge.textContent = (status === 'PASS' ? 'PASS ' : 'FAIL ') + tests + '/' + tests;
+                    authCount.textContent = String(tests);
+                    if (status === 'PASS') {
+                        authStatus.textContent = '✅ PASS';
+                        authStatus.className = 'success';
+                    } else if (status === 'FAIL') {
+                        authStatus.textContent = '❌ FAIL';
+                        authStatus.className = '';
+                    } else {
+                        authStatus.textContent = '⚠️ ' + status;
+                        authStatus.className = '';
+                    }
+
+                    const lines = [];
+                    lines.push(`Tests run: ${tests}, Failures: ${failures}, Errors: ${errors}, Skipped: ${skipped}`);
+                    lines.push('SOURCE: ' + (data.source || 'unknown'));
+                    if (data.error) lines.push('ERROR: ' + data.error);
+
+                    codeBox.textContent = lines.join('\n');
+                } catch (e) {
+                    console.warn('Error actualizando tarjeta de tests:', e);
+                }
+            }
+
+            // Intenta obtener el estado desde el servidor
+            fetch('/status/login-tests')
+                .then(resp => resp.ok ? resp.json() : Promise.reject(resp.status))
+                .then(json => updateLoginCard(json))
+                .catch(err => {
+                    console.warn('No se pudo obtener /status/login-tests, mostrando valores estáticos:', err);
+                });
+        });
+    </script>
 </body>
 </html>

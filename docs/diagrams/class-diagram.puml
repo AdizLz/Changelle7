@@ -1,0 +1,157 @@
+@startuml Reto6_ClassDiagram
+
+!define ABSTRACT abstract
+!define INTERFACE interface
+
+' Modelos
+package "Model" {
+    class User {
+        - id: String
+        - name: String
+        - email: String
+        - password: String (hashed)
+        --
+        + getId(): String
+        + setId(id: String): void
+        + getName(): String
+        + setName(name: String): void
+        + getEmail(): String
+        + setEmail(email: String): void
+        + getPassword(): String
+        + setPassword(password: String): void
+    }
+
+    class Item {
+        - id: String
+        - name: String
+        - description: String
+        - price: String
+        --
+        + getId(): String
+        + setId(id: String): void
+        + getName(): String
+        + setName(name: String): void
+        + getDescription(): String
+        + setDescription(description: String): void
+        + getPrice(): String
+        + setPrice(price: String): void
+    }
+
+    class Offer {
+        - dbId: Long
+        - id: String (item_id)
+        - name: String
+        - email: String
+        - amount: double
+        --
+        + getDbId(): Long
+        + setDbId(dbId: Long): void
+        + getId(): String
+        + setId(id: String): void
+        + getName(): String
+        + setName(name: String): void
+        + getEmail(): String
+        + setEmail(email: String): void
+        + getAmount(): double
+        + setAmount(amount: double): void
+    }
+}
+
+' Servicios
+package "Service" {
+    class UserService {
+        - users: Collection<User>
+        --
+        + getAll(): Collection<User>
+        + get(id: String): User
+        + add(user: User): void
+        + update(id: String, user: User): void
+        + delete(id: String): void
+        + exists(id: String): boolean
+        + findByEmail(email: String): User
+    }
+
+    class AuthService {
+        - userService: UserService
+        --
+        + AuthService(userService: UserService)
+        - hashPassword(plainPassword: String): String
+        - verifyPassword(plainPassword: String, storedHash: String): boolean
+        + register(id: String, name: String, email: String, plainPassword: String): User
+        + login(email: String, plainPassword: String): User
+    }
+
+    class ItemService {
+        - resourceItemsCache: List<Item>
+        --
+        + getAll(): Collection<Item>
+        + get(id: String): Item
+        + add(item: Item): void
+        + update(id: String, item: Item): void
+        + delete(id: String): void
+        + exists(id: String): boolean
+        + getFiltered(q: String, minPrice: Double, maxPrice: Double): Collection<Item>
+        + updatePrice(id: String, price: String): void
+        + getPriceAsDouble(id: String): Double
+        - loadItemsFromResource(): List<Item>
+    }
+
+    class OfferService {
+        --
+        + add(offer: Offer): void
+        + getAll(): List<Offer>
+        + getByItemId(itemId: String): List<Offer>
+        + getHighestOffer(itemId: String): Offer
+        - getOffersFromJson(): List<Offer>
+        - getOffersFromDatabase(): List<Offer>
+    }
+
+    class SessionManager {
+        - userService: UserService
+        --
+        + SessionManager(userService: UserService)
+        + getLoggedUser(request: Request): User
+        + loginUser(request: Request, user: User): void
+        + logout(request: Request): void
+    }
+}
+
+' Controladores
+package "Controller" {
+    class PriceUpdateWebSocket {
+        --
+        + onConnect(session: Session): void
+        + onMessage(session: Session, message: String): void
+        + onClose(session: Session, statusCode: int, reason: String): void
+        + notifyPriceChange(itemId: String, newPrice: String): void
+    }
+}
+
+' Base de datos
+package "Database" {
+    class DatabaseManager {
+        - dataSource: HikariDataSource
+        --
+        + init(): void
+        + getConnection(): Connection
+        + testConnection(): void
+        + close(): void
+        - createTables(): void
+        - loadInitialData(): void
+    }
+}
+
+' Relaciones
+UserService --> User : manages
+AuthService --> UserService : uses
+AuthService --> User : authenticates
+ItemService --> Item : manages
+OfferService --> Offer : manages
+OfferService --> ItemService : references
+SessionManager --> UserService : uses
+SessionManager --> User : manages sessions
+PriceUpdateWebSocket --> ItemService : updates prices
+DatabaseManager --> "PostgreSQL" : connects
+
+@enduml
+

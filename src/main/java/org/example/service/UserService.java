@@ -10,11 +10,30 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Servicio de gestión de usuarios.
+ *
+ * Proporciona operaciones CRUD (Create, Read, Update, Delete) para usuarios
+ * en la base de datos PostgreSQL, incluyendo búsquedas y autenticación.
+ *
+ * Responsabilidades:
+ * - Obtener, crear, actualizar y eliminar usuarios
+ * - Buscar usuarios por nombre, email o ID
+ * - Verificar existencia de usuarios
+ * - Gestionar conexiones a base de datos a través de DatabaseManager
+ *
+ * Nota: Todas las operaciones se registran en logs para auditoría y debugging.
+ *
+ * @see DatabaseManager
+ * @see User
+ */
 public class UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     /**
-     * Obtiene todos los usuarios
+     * Obtiene todos los usuarios del sistema.
+     *
+     * @return Colección de todos los usuarios ordenados por fecha de creación (más recientes primero)
      */
     public Collection<User> getAll() {
         List<User> users = new ArrayList<>();
@@ -42,7 +61,10 @@ public class UserService {
     }
 
     /**
-     * Obtiene un usuario por ID
+     * Obtiene un usuario específico por su ID.
+     *
+     * @param id Identificador único del usuario
+     * @return Usuario encontrado, o null si no existe
      */
     public User get(String id) {
         String sql = "SELECT id, name, email, password FROM users WHERE id = ?";
@@ -74,7 +96,10 @@ public class UserService {
     }
 
     /**
-     * Agrega un nuevo usuario
+     * Registra un nuevo usuario en la base de datos.
+     *
+     * @param user Usuario a registrar (debe tener ID, nombre, email y contraseña hasheada)
+     * @throws RuntimeException Si ocurre un error en la base de datos
      */
     public void add(User user) {
         String sql = "INSERT INTO users (id, name, email, password) VALUES (?, ?, ?, ?)";
@@ -100,7 +125,14 @@ public class UserService {
     }
 
     /**
-     * Actualiza un usuario existente
+     * Actualiza la información de un usuario existente.
+     *
+     * Nota: Actualmente actualiza nombre y email. Para cambiar contraseña,
+     * se recomienda implementar un método específico con validaciones adicionales.
+     *
+     * @param id Identificador del usuario a actualizar
+     * @param user Datos actualizados del usuario
+     * @throws RuntimeException Si ocurre un error en la base de datos
      */
     public void update(String id, User user) {
         String sql = "UPDATE users SET name = ?, email = ? WHERE id = ?";
@@ -127,7 +159,10 @@ public class UserService {
     }
 
     /**
-     * Elimina un usuario
+     * Elimina un usuario de la base de datos.
+     *
+     * @param id Identificador del usuario a eliminar
+     * @throws RuntimeException Si ocurre un error en la base de datos
      */
     public void delete(String id) {
         String sql = "DELETE FROM users WHERE id = ?";
@@ -152,7 +187,10 @@ public class UserService {
     }
 
     /**
-     * Verifica si un usuario existe
+     * Verifica si un usuario existe por su ID.
+     *
+     * @param id Identificador del usuario
+     * @return true si el usuario existe, false en caso contrario
      */
     public boolean exists(String id) {
         String sql = "SELECT COUNT(*) FROM users WHERE id = ?";
@@ -176,7 +214,10 @@ public class UserService {
     }
 
     /**
-     * Busca usuarios por nombre o email
+     * Busca usuarios por nombre o email (búsqueda case-insensitive).
+     *
+     * @param query Término de búsqueda (se busca en nombre y email)
+     * @return Colección de usuarios que coinciden con la búsqueda
      */
     public Collection<User> search(String query) {
         List<User> users = new ArrayList<>();
@@ -209,7 +250,10 @@ public class UserService {
     }
 
     /**
-     * Busca usuario por email (para login)
+     * Busca un usuario por email (utilizado para login).
+     *
+     * @param email Correo electrónico del usuario
+     * @return Usuario encontrado con contraseña hasheada, o null si no existe
      */
     public User findByEmail(String email) {
         String sql = "SELECT id, name, email, password FROM users WHERE email = ? LIMIT 1";

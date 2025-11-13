@@ -1,0 +1,90 @@
+@startuml Reto6_SystemArchitecture
+
+!define PRIMARY_COLOR #4A90E2
+!define SECONDARY_COLOR #7ED321
+!define DANGER_COLOR #E84C3D
+
+skinparam backgroundColor #FEFEFE
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #333333
+
+' Cliente
+rectangle "CLIENT LAYER" {
+    component [Web Browser] as WEB
+    component [HTML/CSS/JS] as FRONTEND
+}
+
+' Servidor
+rectangle "SERVER LAYER (Spark Java)" {
+    component [Route Handler:\nGET /items\nPOST /login\nGET /api/items\nPOST /api/offers] as ROUTES
+    component [WebSocket Controller\n/ws/prices] as WEBSOCKET
+    component [Static Files\n/public/*.js\n/public/*.css] as STATICS
+}
+
+' Servicios
+rectangle "SERVICE LAYER" {
+    component [AuthService\n+ login()\n+ register()] as AUTH
+    component [UserService\n+ getAll()\n+ get()\n+ findByEmail()] as USERS
+    component [ItemService\n+ getAll()\n+ getFiltered()\n+ updatePrice()] as ITEMS
+    component [OfferService\n+ add()\n+ getByItemId()\n+ getHighestOffer()] as OFFERS
+    component [SessionManager\n+ getLoggedUser()\n+ loginUser()\n+ logout()] as SESSION
+}
+
+' Modelos
+rectangle "MODEL LAYER" {
+    component [User] as USER_MODEL
+    component [Item] as ITEM_MODEL
+    component [Offer] as OFFER_MODEL
+}
+
+' Base de datos
+rectangle "PERSISTENCE LAYER" {
+    component [DatabaseManager\n(HikariCP Pool)] as DB_MANAGER
+    database "PostgreSQL\nauc tion_store" as POSTGRES
+}
+
+' Template Engine
+rectangle "VIEW LAYER" {
+    component [Mustache Templates\nitems-list.mustache\nitem-detail.mustache\nlogin.mustache\noffers-list.mustache] as TEMPLATES
+}
+
+' Conexiones
+WEB --> FRONTEND : uses
+FRONTEND --> ROUTES : HTTP Requests\n(GET/POST/PUT/DELETE)
+FRONTEND --> WEBSOCKET : WebSocket\nConnection
+ROUTES --> AUTH : authenticate
+ROUTES --> USERS : manage users
+ROUTES --> ITEMS : manage items
+ROUTES --> OFFERS : manage offers
+ROUTES --> SESSION : manage sessions
+ROUTES --> TEMPLATES : render
+WEBSOCKET --> ITEMS : update prices
+AUTH --> USERS : validate
+AUTH --> USER_MODEL : create/authenticate
+SESSION --> USERS : get logged user
+ITEMS --> ITEM_MODEL : create/update
+OFFERS --> OFFER_MODEL : create
+USERS --> DB_MANAGER : query
+ITEMS --> DB_MANAGER : query
+OFFERS --> DB_MANAGER : query
+DB_MANAGER --> POSTGRES : SQL
+
+note right of ROUTES
+  Main entry point for all HTTP requests
+  Handles routing and request delegation
+end note
+
+note right of SERVICE_LAYER
+  Business logic layer
+  Validates and processes data
+  Interacts with database
+end note
+
+note right of DB_MANAGER
+  Connection pooling with HikariCP
+  Thread-safe database access
+  Supports transaction management
+end note
+
+@enduml
+
